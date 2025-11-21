@@ -1,0 +1,26 @@
+{
+  "Pizza": [
+    {
+      "gramaj": 450,
+      "vegetarian": true,
+      "nume": "Pizza Margherita",
+      "pret": 25.0
+    }
+  ],
+  "Fel principal": [
+    {
+      "gramaj": 300,
+      "vegetarian": false,
+      "nume": "Burger",
+      "pret": 30.0
+    }
+  ],
+  "Desert": [
+    {
+      "gramaj": 150,
+      "vegetarian": true,
+      "nume": "Tiramisu",
+      "pret": 18.0
+    }
+  ]
+}

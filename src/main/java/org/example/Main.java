@@ -2,6 +2,11 @@ package org.example;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
+import java.io.FileWriter;
+import java.io.IOException;
 //clasa de baza Produs
 class Produs {
     String nume;
@@ -123,13 +128,23 @@ class Meniu{
                 .anyMatch(p -> p.pret > 100);
     }
 
-    // ---------------- Cautare sigura ----------------
+    // Cautare sigura
     public Optional<Produs> cautaProdusDupaNume(String nume) {
         return categorii.values().stream()
                 .flatMap(List::stream)
                 .filter(p -> p.nume.equalsIgnoreCase(nume))
                 .findFirst();
     }
+    public void exportaInJson(String numeFisier) {
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        try (FileWriter writer = new FileWriter(numeFisier)) {
+            gson.toJson(categorii, writer);
+            System.out.println("Meniul a fost exportat în " + numeFisier);
+        } catch (IOException e) {
+            System.out.println("Eroare la exportul meniului în JSON!");
+        }
+    }
+
 }
 //clasa pizza
 class Pizza {
@@ -170,49 +185,21 @@ class Pizza {
 }
 public class Main {
     public static void main(String[] args) {
+        Config cfg = LoaderConfig.incarcareConfiguratie();
 
-        // Creăm meniul
+        if (cfg == null) {
+            System.out.println("Aplicația nu poate porni fără configurare validă.");
+            return;
+        }
+
+        System.out.println("Pornim aplicația pentru restaurantul: " + cfg.getNumeRestaurant());
+        System.out.println("TVA curent: " + cfg.getTva());
+
         Meniu meniu = new Meniu();
+        meniu.adaugaProdus("Pizza", new PreparatCulinar("Pizza Margherita", 25, 450, true));
+        meniu.adaugaProdus("Desert", new PreparatCulinar("Tiramisu", 18, 150, true));
+        meniu.adaugaProdus("Fel principal", new PreparatCulinar("Burger", 30, 300, false));
 
-        // Adăugăm produse
-        meniu.adaugaProdus("Pizza", new PreparatCulinar("Salami", 40, 450, true));
-        meniu.adaugaProdus("Pizza", new PreparatCulinar("Pollo", 48, 500, false));
-        meniu.adaugaProdus("Desert", new PreparatCulinar("Clatite", 22, 200, true));
-        meniu.adaugaProdus("Bauturi", new Bauturi("Limonada", 12, 330));
-
-        // Produse vegetariene sortate
-        System.out.println("Produse vegetariene:");
-        meniu.produseVegetarieneSortate()
-                .forEach(p -> System.out.println(p.detalii()));
-
-        // Pret mediu desert
-        System.out.println("\nPret mediu Desert: " +
-                meniu.pretMediuPentruCategorie("Desert"));
-
-        // Exista produs >100 lei?
-        System.out.println("\nExista produs >100 lei?: " +
-                meniu.existaProdusPeste100());
-
-        // Cautare sigura
-        System.out.println("\nCaut 'Pollo':");
-        meniu.cautaProdusDupaNume("Pollo")
-                .ifPresentOrElse(
-                        p -> System.out.println("Gasit: " + p.detalii()),
-                        () -> System.out.println("Nu exista!")
-                );
-
-        // Pizza custom
-        Pizza pizza = new Pizza.PizzaBuilder("Subtire", "Rosii")
-                .adaugaTopping("Mozzarella")
-                .adaugaTopping("Masline")
-                .build();
-        System.out.println("\nPizza custom: " + pizza);
-
-        // Comanda
-        Comanda comanda = new Comanda();
-        comanda.adaugaProdus(
-                meniu.cautaProdusDupaNume("Salami").get(), 2);
-        comanda.setRegulaDiscount((prod, cant) -> prod.pret * cant);
-        comanda.afiseazaComanda();
+        meniu.exportaInJson("meniu_exportat.json");
     }
 }
